@@ -40,13 +40,18 @@ android {
     }
 
     buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-        }
-        debug {
-            signingConfig = signingConfigs.getByName("debug")
-        }
+    release {
+        // REQUIRED pairing
+        isMinifyEnabled = true
+        isShrinkResources = true
+
+        // Default Flutter Proguard rules
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+
+        signingConfig = signingConfigs.getByName("release")
     }
 }
 

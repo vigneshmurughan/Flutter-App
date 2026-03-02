@@ -1,4 +1,4 @@
-name: Android AAB CI (Flutter + Fastlane)
+name: Android AAB CI (Flutter)
 
 on:
   push:
@@ -11,12 +11,17 @@ jobs:
     name: Build Android AAB
     runs-on: ubuntu-latest
 
+    env:
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
     steps:
-      # 1️⃣ Checkout source code
+      # 1️⃣ Checkout source
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Set up Java (required for Android & Gradle)
+      # 2️⃣ Set up Java (required by Gradle / Android)
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -30,25 +35,21 @@ jobs:
           channel: stable
           cache: true
 
-      # 4️⃣ Verify Flutter installation
-      - name: Flutter doctor
-        run: flutter doctor
-
-      # 5️⃣ Install Ruby (required for Fastlane)
-      - name: Install Ruby
+      # 4️⃣ Decode Android keystore
+      - name: Decode keystore
         run: |
-          sudo apt update
-          sudo apt install -y ruby-full
+          mkdir -p android/app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-keystore.jks
 
-      # 6️⃣ Install Fastlane
-      - name: Install Fastlane
-        run: sudo gem install fastlane -NV
+      # 5️⃣ Flutter dependencies
+      - name: Flutter pub get
+        run: flutter pub get
 
-      # 7️⃣ Build Android App Bundle (AAB) using Fastlane
-      - name: Build AAB with Fastlane
-        run: fastlane android build_aab
+      # 6️⃣ Build signed AAB
+      - name: Build Android App Bundle (AAB)
+        run: flutter build appbundle --release
 
-      # 8️⃣ Upload AAB artifact
+      # 7️⃣ Upload AAB artifact
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
