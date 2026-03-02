@@ -1,5 +1,3 @@
-import java.io.File
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,38 +18,29 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("KEYSTORE_PATH")
-            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
-            val keyAliasEnv = System.getenv("KEY_ALIAS")
-            val keyPasswordEnv = System.getenv("KEY_PASSWORD")
-
-            if (
-                !keystorePath.isNullOrEmpty() &&
-                !keystorePassword.isNullOrEmpty() &&
-                !keyAliasEnv.isNullOrEmpty() &&
-                !keyPasswordEnv.isNullOrEmpty()
-            ) {
-                storeFile = file(keystorePath)
-                storePassword = keystorePassword
-                keyAlias = keyAliasEnv
-                keyPassword = keyPasswordEnv
-            }
+            storeFile = file("release-keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
         }
     }
 
     buildTypes {
-    release {
-        // REQUIRED pairing
-        isMinifyEnabled = true
-        isShrinkResources = true
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
 
-        // Default Flutter Proguard rules
-        proguardFiles(
-            getDefaultProguardFile("proguard-android-optimize.txt"),
-            "proguard-rules.pro"
-        )
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
 
-        signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
+        }
+
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 }
 
