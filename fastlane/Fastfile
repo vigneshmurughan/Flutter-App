@@ -1,23 +1,13 @@
 default_platform(:android)
 
 platform :android do
-  desc "Build signed Android App Bundle (CI ready)"
+  desc "Build signed AAB"
   lane :build_aab do
     root = File.expand_path("..", __dir__)
-    pubspec = File.join(root, "pubspec.yaml")
-
-    # Read current version
-    version = sh("grep '^version:' #{pubspec} | awk '{print $2}'").strip
-    UI.message("Current version: #{version}")
-
-    name, code = version.split("+")
-    new_code = code.to_i + 1
-
-    sh "sed -i 's/^version:.*/version: #{name}+#{new_code}/' #{pubspec}"
 
     Dir.chdir(root) do
       sh "flutter pub get"
-      sh "flutter build appbundle --release"
+      sh "flutter build appbundle --release --no-tree-shake-icons"
     end
   end
 end
