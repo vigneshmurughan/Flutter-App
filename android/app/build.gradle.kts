@@ -1,24 +1,14 @@
-import java.util.Properties
+import java.io.File
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.devops_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     defaultConfig {
         applicationId = "com.example.devops_app"
@@ -30,24 +20,32 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreProperties = Properties()
-            val keystoreFile = rootProject.file("key.properties")
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            val keyAliasEnv = System.getenv("KEY_ALIAS")
+            val keyPasswordEnv = System.getenv("KEY_PASSWORD")
 
-            if (keystoreFile.exists()) {
-                keystoreProperties.load(keystoreFile.inputStream())
+            if (
+                !keystorePath.isNullOrEmpty() &&
+                !keystorePassword.isNullOrEmpty() &&
+                !keyAliasEnv.isNullOrEmpty() &&
+                !keyPasswordEnv.isNullOrEmpty()
+            ) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = keyAliasEnv
+                keyPassword = keyPasswordEnv
             }
-
-            storeFile = file(keystoreProperties["storeFile"]!!.toString())
-            storePassword = keystoreProperties["storePassword"]!!.toString()
-            keyAlias = keystoreProperties["keyAlias"]!!.toString()
-            keyPassword = keystoreProperties["keyPassword"]!!.toString()
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }

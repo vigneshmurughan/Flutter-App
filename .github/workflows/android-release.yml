@@ -1,63 +1,47 @@
-name: Android Release (AAB)
+name: Android Release Build
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     env:
-      JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
+      KEYSTORE_PATH: ${{ github.workspace }}/android/app/release-keystore.jks
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.41.2
-          channel: stable
+          flutter-version: '3.41.2'
 
-      - name: Install Ruby & Fastlane
+      - name: Decode keystore
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ruby-full
-          gem install fastlane
-
-      # 🔑 Decode keystore
-      - name: Decode Android keystore
-        run: |
-          mkdir -p android/app
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-keystore.jks
-
-      # 🧾 Generate key.properties
-      - name: Create key.properties
-        run: |
-          cat <<EOF > android/key.properties
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=app/release-keystore.jks
-          EOF
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-keystore.jks
 
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Build AAB with Fastlane
-        run: fastlane android build_aab
+      - name: Build AAB
+        run: flutter build appbundle --release
 
-      - name: Upload AAB
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/bundle/release/*.aab
+          path: build/app/outputs/bundle/release/app-release.aab
