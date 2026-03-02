@@ -8,6 +8,16 @@ android {
     namespace = "com.example.devops_app"
     compileSdk = flutter.compileSdkVersion
 
+    // 🔑 FIX JVM TARGET MISMATCH
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     defaultConfig {
         applicationId = "com.example.devops_app"
         minSdk = flutter.minSdkVersion
