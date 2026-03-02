@@ -15,21 +15,13 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## Android
 
-### android build_apk
-
-```sh
-[bundle exec] fastlane android build_apk
-```
-
-Build Flutter Android APK (testing)
-
 ### android build_aab
 
 ```sh
 [bundle exec] fastlane android build_aab
 ```
 
-Build Flutter Android AAB (Play Store)
+Build Flutter Android AAB with auto versioning
 
 ----
 

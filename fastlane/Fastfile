@@ -1,15 +1,23 @@
 default_platform(:android)
 
 platform :android do
-  desc "Build Flutter Android APK (testing)"
-  lane :build_apk do
-    sh "flutter pub get"
-    sh "flutter build apk --release"
-  end
-
-  desc "Build Flutter Android AAB (Play Store)"
+  desc "Build signed Android App Bundle (CI ready)"
   lane :build_aab do
-    sh "flutter pub get"
-    sh "flutter build appbundle --release"
+    root = File.expand_path("..", __dir__)
+    pubspec = File.join(root, "pubspec.yaml")
+
+    # Read current version
+    version = sh("grep '^version:' #{pubspec} | awk '{print $2}'").strip
+    UI.message("Current version: #{version}")
+
+    name, code = version.split("+")
+    new_code = code.to_i + 1
+
+    sh "sed -i 's/^version:.*/version: #{name}+#{new_code}/' #{pubspec}"
+
+    Dir.chdir(root) do
+      sh "flutter pub get"
+      sh "flutter build appbundle --release"
+    end
   end
 end
