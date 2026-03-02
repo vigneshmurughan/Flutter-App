@@ -1,4 +1,4 @@
-name: Android APK CI
+name: Android AAB CI (Flutter + Fastlane)
 
 on:
   push:
@@ -7,36 +7,50 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
+    name: Build Android AAB
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      # 1️⃣ Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Set up Java (required for Android & Gradle)
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
+      # 3️⃣ Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
+      # 4️⃣ Verify Flutter installation
       - name: Flutter doctor
         run: flutter doctor
 
-      - name: Install dependencies
-        run: flutter pub get
+      # 5️⃣ Install Ruby (required for Fastlane)
+      - name: Install Ruby
+        run: |
+          sudo apt update
+          sudo apt install -y ruby-full
 
-      - name: Build release APK
-        run: flutter build apk --release
+      # 6️⃣ Install Fastlane
+      - name: Install Fastlane
+        run: sudo gem install fastlane -NV
 
-      - name: Upload APK artifact
+      # 7️⃣ Build Android App Bundle (AAB) using Fastlane
+      - name: Build AAB with Fastlane
+        run: fastlane android build_aab
+
+      # 8️⃣ Upload AAB artifact
+      - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
