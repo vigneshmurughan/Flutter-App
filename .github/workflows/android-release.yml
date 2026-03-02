@@ -1,94 +1,63 @@
 name: Android Release (AAB)
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
-  build-aab:
+  build:
     runs-on: ubuntu-latest
 
     env:
-      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-      ANDROID_HOME: /usr/local/lib/android/sdk
+      JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
 
     steps:
-      # -----------------------------
-      # Checkout
-      # -----------------------------
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      # -----------------------------
-      # Java (required by Android)
-      # -----------------------------
-      - name: Set up Java 17
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # -----------------------------
-      # Flutter
-      # -----------------------------
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.41.2"
+          flutter-version: 3.41.2
           channel: stable
-          cache: true
 
-      # -----------------------------
-      # Android SDK
-      # -----------------------------
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      # -----------------------------
-      # Restore keystore
-      # -----------------------------
-      - name: Decode keystore
+      - name: Install Ruby & Fastlane
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby-full
+          gem install fastlane
+
+      # 🔑 Decode keystore
+      - name: Decode Android keystore
+        run: |
+          mkdir -p android/app
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-keystore.jks
 
-      # -----------------------------
-      # Create key.properties
-      # -----------------------------
+      # 🧾 Generate key.properties
       - name: Create key.properties
         run: |
           cat <<EOF > android/key.properties
-          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          storeFile=release-keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=app/release-keystore.jks
           EOF
 
-      # -----------------------------
-      # Accept Android licenses
-      # -----------------------------
-      - name: Accept Android licenses
-        run: yes | sdkmanager --licenses
-
-      # -----------------------------
-      # Flutter dependencies
-      # -----------------------------
       - name: Flutter pub get
         run: flutter pub get
 
-      # -----------------------------
-      # Build signed AAB
-      # -----------------------------
-      - name: Build release AAB
-        run: flutter build appbundle --release --no-tree-shake-icons
+      - name: Build AAB with Fastlane
+        run: fastlane android build_aab
 
-      # -----------------------------
-      # Upload artifact
-      # -----------------------------
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/bundle/release/app-release.aab
+          path: build/app/outputs/bundle/release/*.aab
