@@ -1,0 +1,15 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build Flutter Android APK (testing)"
+  lane :build_apk do
+    sh "flutter pub get"
+    sh "flutter build apk --release"
+  end
+
+  desc "Build Flutter Android AAB (Play Store)"
+  lane :build_aab do
+    sh "flutter pub get"
+    sh "flutter build appbundle --release"
+  end
+end
