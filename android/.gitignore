@@ -1,4 +1,3 @@
-gradle-wrapper.jar
 /.gradle
 /captures/
 # Keep Gradle wrapper scripts in git for reproducible CI builds.
