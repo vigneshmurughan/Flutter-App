@@ -1,8 +1,7 @@
 gradle-wrapper.jar
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
+# Keep Gradle wrapper scripts in git for reproducible CI builds.
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
